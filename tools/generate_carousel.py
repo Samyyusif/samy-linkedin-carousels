@@ -203,6 +203,28 @@ body {{ width:{W}px; background:#050406; }}
   padding:18px 22px; margin-top:26px; align-self:flex-start;
   max-width:100%; word-break:break-word; line-height:1.4;
 }}
+/* ---- news slide: one story per slide, led by its number ---- */
+/* Per the dataviz form heuristic, a single headline value is a hero figure,
+   not a one-bar chart; a before/after pair is a dumbbell in ONE hue at two
+   shades. No stock photography - a photo next to "+629%" carries no data. */
+.n-fig {{ font-weight:700; font-size:104px; line-height:1; letter-spacing:-3px;
+          color:{AMBER}; text-shadow:0 4px 34px rgba(0,0,0,0.45); }}
+.n-head {{ font-weight:700; font-size:40px; line-height:1.24; letter-spacing:-0.5px;
+           margin-top:16px; text-shadow:0 2px 24px rgba(0,0,0,0.5); }}
+.n-body {{ font-weight:400; font-size:24px; line-height:1.55; color:{MUTE};
+           margin-top:20px; max-width:720px; }}
+.n-src {{ font-family:'PlexMono', monospace; font-size:16px; color:{FAINT};
+          margin-top:22px; letter-spacing:0.4px; }}
+
+.cmp {{ margin-top:26px; display:flex; flex-direction:column; gap:12px; }}
+.cmp-row {{ display:flex; align-items:center; gap:16px; }}
+.cmp-lbl {{ font-size:19px; color:{FAINT}; width:130px; flex:none; text-align:right; }}
+.cmp-track {{ flex:1; height:20px; display:flex; align-items:center; }}
+.cmp-fill {{ height:20px; border-radius:4px; background:{AMBER}; }}
+.cmp-fill.dim {{ background:rgba(255,165,61,0.34); }}
+.cmp-val {{ font-family:'PlexMono', monospace; font-weight:500; font-size:20px;
+            color:{INK}; width:150px; flex:none; }}
+
 .figure {{ font-weight:700; font-size:172px; line-height:0.94; letter-spacing:-5px;
            text-shadow: 0 4px 40px rgba(0,0,0,0.5); }}
 .figure-note {{ font-weight:400; font-size:25px; line-height:1.5; color:{MUTE}; margin-top:24px; max-width:600px; }}
@@ -290,11 +312,43 @@ def signature(idx, total, lead=False):
     </div>'''
 
 
+def compare_block(c):
+    """Before -> after as a two-row dumbbell in one hue at two shades.
+    Bar length is proportional to the raw values, so the visual cannot
+    disagree with the numbers printed beside it."""
+    try:
+        a = float(c["from"]["value"])
+        b = float(c["to"]["value"])
+    except (KeyError, TypeError, ValueError):
+        return ""
+    hi = max(abs(a), abs(b)) or 1.0
+    rows = [("dim", c["from"], a), ("", c["to"], b)]
+    out = '<div class="cmp">'
+    for cls, side, val in rows:
+        pct = max(2.0, abs(val) / hi * 100.0)
+        out += (f'<div class="cmp-row">'
+                f'<span class="cmp-lbl">{rich(side.get("label", ""))}</span>'
+                f'<div class="cmp-track"><div class="cmp-fill {cls}" style="width:{pct:.1f}%"></div></div>'
+                f'<span class="cmp-val">{rich(side.get("display", side.get("value")))}</span>'
+                f'</div>')
+    return out + "</div>"
+
+
 def render_slide(kind, d, ref, idx, total, layout):
     if kind == "cover":
         mid = (f'<div class="h1">{rich(d.get("headline"))}</div>'
                f'<div class="sub">{rich(d.get("sub"))}</div>')
         sig = signature(idx, total, lead=True)
+    elif kind == "news":
+        mid = f'<div class="n-fig">{rich(d.get("figure"))}</div>'
+        mid += f'<div class="n-head">{rich(d.get("headline"))}</div>'
+        if d.get("compare"):
+            mid += compare_block(d["compare"])
+        if d.get("body"):
+            mid += f'<div class="n-body">{rich(d["body"])}</div>'
+        if d.get("source"):
+            mid += f'<div class="n-src">SOURCE: {rich(d["source"])}</div>'
+        sig = signature(idx, total)
     elif kind == "figure":
         mid = (f'<div class="figure">{rich(d.get("figure"))}</div>'
                f'<div class="figure-note">{rich(d.get("note"))}</div>')
