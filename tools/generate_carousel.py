@@ -26,9 +26,15 @@ SPEC SHAPE  (all slide copy is ENGLISH - the Arabic lives in the LinkedIn
   "slides": [
     {"type": "point",  "tag": "The Problem", "icon": "warning",
      "headline": "...", "body": "..."},
+    {"type": "point",  "tag": "Step 1", "icon": "gear",
+     "headline": "...", "cmd": "npx skills add owner/repo", "body": "..."},
     {"type": "figure", "tag": "The Cost",    "icon": "chart_up",
      "figure": "61%",   "note": "..."}
   ],
+
+An optional "cmd" on a point slide renders as a monospace command block between
+the headline and the body - use it for anything the reader is meant to type.
+Keep it under ~60 characters so it stays on one or two lines.
   "cta": {                                   # optional but recommended
     "tag": "Save This", "icon": "bookmark",
     "headline": "...", "body": "..."
@@ -82,6 +88,8 @@ FONT_FACES = f"""
 @font-face {{ font-family:'Plex'; src:url('file://{FONT_DIR}/IBMPlexSans-Medium.ttf'); font-weight:500; }}
 @font-face {{ font-family:'Plex'; src:url('file://{FONT_DIR}/IBMPlexSans-SemiBold.ttf'); font-weight:600; }}
 @font-face {{ font-family:'Plex'; src:url('file://{FONT_DIR}/IBMPlexSans-Bold.ttf'); font-weight:700; }}
+@font-face {{ font-family:'PlexMono'; src:url('file://{FONT_DIR}/IBMPlexMono-Regular.ttf'); font-weight:400; }}
+@font-face {{ font-family:'PlexMono'; src:url('file://{FONT_DIR}/IBMPlexMono-Medium.ttf'); font-weight:500; }}
 """
 
 CSS = FONT_FACES + f"""
@@ -186,6 +194,15 @@ body {{ width:{W}px; background:#050406; }}
 .hot {{ color:{AMBER}; }}
 .sub {{ font-weight:400; font-size:26px; line-height:1.55; color:{MUTE}; margin-top:26px; max-width:660px; }}
 .body {{ font-weight:400; font-size:27px; line-height:1.6; color:{MUTE}; margin-top:28px; max-width:680px; }}
+/* command block - for step-by-step slides. monospace so a reader can copy it
+   accurately, on its own ground so it reads as "type this", not as prose. */
+.cmd {{
+  font-family:'PlexMono', monospace; font-weight:500; font-size:24px;
+  color:#ffd8a6; background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.18); border-radius:12px;
+  padding:18px 22px; margin-top:26px; align-self:flex-start;
+  max-width:100%; word-break:break-word; line-height:1.4;
+}}
 .figure {{ font-weight:700; font-size:172px; line-height:0.94; letter-spacing:-5px;
            text-shadow: 0 4px 40px rgba(0,0,0,0.5); }}
 .figure-note {{ font-weight:400; font-size:25px; line-height:1.5; color:{MUTE}; margin-top:24px; max-width:600px; }}
@@ -284,6 +301,8 @@ def render_slide(kind, d, ref, idx, total, layout):
         sig = signature(idx, total)
     else:  # point / cta
         mid = f'<div class="h2">{rich(d.get("headline"))}</div>'
+        if d.get("cmd"):
+            mid += f'<div class="cmd">{htmllib.escape(str(d["cmd"]))}</div>'
         if d.get("body"):
             mid += f'<div class="body">{rich(d.get("body"))}</div>'
         sig = signature(idx, total)
