@@ -26,6 +26,10 @@ fetch assets/samy-avatar.png     "$DEST/assets/samy-avatar.png"
 for w in Regular Medium SemiBold Bold; do
   fetch "fonts/IBMPlexSans-$w.ttf" "$DEST/fonts/IBMPlexSans-$w.ttf"
 done
+# Mono is used by the command blocks on step-by-step slides.
+for w in Regular Medium; do
+  fetch "fonts/IBMPlexMono-$w.ttf" "$DEST/fonts/IBMPlexMono-$w.ttf"
+done
 
 # Runtime deps. Playwright's Chromium is preinstalled in this image.
 python3 -c "import img2pdf" 2>/dev/null || pip install img2pdf --break-system-packages -q
