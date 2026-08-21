@@ -324,7 +324,9 @@ def main():
     pngs = []
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": W, "height": H}, device_scale_factor=2)
+        # 1080x1350 is exactly LinkedIn's carousel spec - rendering at 2x just
+        # quadrupled the PDF size (16MB for 5 slides) with no visible gain.
+        page = browser.new_page(viewport={"width": W, "height": H}, device_scale_factor=1)
         page.goto(f"file://{html_path}")
         page.wait_for_timeout(300)
         for i in range(total):
