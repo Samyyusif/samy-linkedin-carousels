@@ -18,6 +18,7 @@ fetch() {  # fetch <repo-relative-path> <local-path>
   curl -fsSL --noproxy '*' -o "$2" "$RAW/$1" && echo "got   $2"
 }
 
+fetch run_pipeline.sh            "$DEST/run_pipeline.sh"
 fetch generate_carousel.py       "$DEST/generate_carousel.py"
 fetch publish_carousel.py        "$DEST/publish_carousel.py"
 fetch icons.py                   "$DEST/icons.py"
