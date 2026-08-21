@@ -19,7 +19,7 @@ fetch() {  # fetch <repo-relative-path> <local-path>
 }
 
 fetch generate_carousel.py       "$DEST/generate_carousel.py"
-fetch post_carousel.py           "$DEST/post_carousel.py"
+fetch publish_carousel.py        "$DEST/publish_carousel.py"
 fetch icons.py                   "$DEST/icons.py"
 fetch assets/samy-avatar.png     "$DEST/assets/samy-avatar.png"
 
@@ -32,8 +32,12 @@ python3 -c "import img2pdf" 2>/dev/null || pip install img2pdf --break-system-pa
 python3 -c "import playwright" 2>/dev/null || pip install playwright --break-system-packages -q
 
 echo
-if [ -s "$HOME/.secrets/github_token" ] && [ -s "$HOME/.secrets/buffer_token" ]; then
-  echo "READY - toolchain and tokens both present."
+# Buffer needs no token here - posting goes through the Buffer MCP connector,
+# which authenticates via the claude.ai account. The GitHub PAT is the only
+# secret left, and it is only needed to host the carousel PDF publicly.
+if [ -s "$HOME/.secrets/github_token" ]; then
+  echo "READY - toolchain present, GitHub token present. Carousels enabled."
 else
-  echo "TOOLCHAIN OK, TOKENS MISSING - restore ~/.secrets/github_token and ~/.secrets/buffer_token"
+  echo "TOOLCHAIN OK, GITHUB TOKEN MISSING - text posts will work via Buffer MCP;"
+  echo "carousels are disabled until ~/.secrets/github_token is restored."
 fi
