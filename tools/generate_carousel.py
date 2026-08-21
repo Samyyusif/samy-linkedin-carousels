@@ -216,6 +216,16 @@ body {{ width:{W}px; background:#050406; }}
 .n-src {{ font-family:'PlexMono', monospace; font-size:16px; color:{FAINT};
           margin-top:22px; letter-spacing:0.4px; }}
 
+/* optional story image, paired with the hero number. Local files only -
+   supply press-kit or licensed art; never scraped news photos. */
+.n-row {{ display:flex; align-items:flex-start; gap:32px; }}
+.n-col {{ flex:1; min-width:0; }}
+.n-img {{
+  width:300px; height:300px; flex:none; border-radius:20px; object-fit:cover;
+  border:1px solid rgba(255,255,255,0.22);
+  box-shadow:0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+}}
+
 .cmp {{ margin-top:26px; display:flex; flex-direction:column; gap:12px; }}
 .cmp-row {{ display:flex; align-items:center; gap:16px; }}
 .cmp-lbl {{ font-size:19px; color:{FAINT}; width:130px; flex:none; text-align:right; }}
@@ -340,12 +350,19 @@ def render_slide(kind, d, ref, idx, total, layout):
                f'<div class="sub">{rich(d.get("sub"))}</div>')
         sig = signature(idx, total, lead=True)
     elif kind == "news":
-        mid = f'<div class="n-fig">{rich(d.get("figure"))}</div>'
-        mid += f'<div class="n-head">{rich(d.get("headline"))}</div>'
+        inner = f'<div class="n-fig">{rich(d.get("figure"))}</div>'
+        inner += f'<div class="n-head">{rich(d.get("headline"))}</div>'
         if d.get("compare"):
-            mid += compare_block(d["compare"])
+            inner += compare_block(d["compare"])
         if d.get("body"):
-            mid += f'<div class="n-body">{rich(d["body"])}</div>'
+            inner += f'<div class="n-body">{rich(d["body"])}</div>'
+        img = d.get("image")
+        if img:
+            path = img if os.path.isabs(img) else os.path.join(BASE, img)
+            mid = (f'<div class="n-row"><div class="n-col">{inner}</div>'
+                   f'<img class="n-img" src="file://{path}" /></div>')
+        else:
+            mid = inner
         if d.get("source"):
             mid += f'<div class="n-src">SOURCE: {rich(d["source"])}</div>'
         sig = signature(idx, total)
