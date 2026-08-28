@@ -90,6 +90,7 @@ FONT_FACES = f"""
 @font-face {{ font-family:'Plex'; src:url('file://{FONT_DIR}/IBMPlexSans-Bold.ttf'); font-weight:700; }}
 @font-face {{ font-family:'PlexMono'; src:url('file://{FONT_DIR}/IBMPlexMono-Regular.ttf'); font-weight:400; }}
 @font-face {{ font-family:'PlexMono'; src:url('file://{FONT_DIR}/IBMPlexMono-Medium.ttf'); font-weight:500; }}
+@font-face {{ font-family:'Cairo'; src:url('file://{FONT_DIR}/Cairo-Var.ttf'); font-weight:200 1000; }}
 """
 
 CSS = FONT_FACES + f"""
@@ -256,6 +257,30 @@ body {{ width:{W}px; background:#050406; }}
   box-shadow: 0 8px 28px rgba(0,0,0,0.50), 0 0 34px rgba(255,150,90,0.30); }}
 .bot.lead .who {{ font-size:29px; }}
 .bot.lead .role {{ font-size:21px; color:rgba(255,255,255,0.58); }}
+
+/* ---- Arabic mode (spec: "lang": "ar") ------------------------------------
+   Same design system, mirrored. Cairo is a variable font, so one file
+   carries every weight the layout uses.
+   Three things break if you only flip `direction`:
+     - negative letter-spacing pulls Arabic glyphs into each other
+     - text-transform:uppercase is meaningless and kills the tag's rhythm
+     - the command block holds Latin formulas, so it stays LTR inside an
+       otherwise RTL card
+   Line-height also has to go up: Cairo's ascenders and descenders are
+   taller than Plex's, and the Latin values clip diacritics. */
+.slide.ar {{ font-family:'Cairo', sans-serif; direction:rtl; text-align:right; }}
+.slide.ar .h1 {{ letter-spacing:0; line-height:1.34; font-size:60px; font-weight:700; }}
+.slide.ar .h2 {{ letter-spacing:0; line-height:1.40; font-size:47px; font-weight:700; }}
+.slide.ar .sub {{ line-height:1.8; font-size:25px; }}
+.slide.ar .body {{ line-height:1.85; font-size:25px; max-width:100%; }}
+.slide.ar .figure-note {{ line-height:1.75; }}
+.slide.ar .tag span {{ text-transform:none; letter-spacing:0; font-size:21px; font-weight:600; }}
+.slide.ar .ref {{ direction:ltr; }}
+.slide.ar .pg {{ direction:ltr; }}
+.slide.ar .who, .slide.ar .role {{ direction:ltr; text-align:right; }}
+.slide.ar .figure {{ direction:ltr; }}
+/* the formula block never mirrors - it is Latin and must read left to right */
+.slide.ar .cmd {{ direction:ltr; text-align:left; font-size:23px; }}
 """
 
 LAYOUTS = {
@@ -292,9 +317,9 @@ def background(layout):
     return f'{fields}{beam}<div class="noise"></div><div class="vignette"></div>'
 
 
-def frame(inner, layout):
+def frame(inner, layout, lang="en"):
     return f'''
-    <div class="slide">
+    <div class="slide{" ar" if lang == "ar" else ""}">
       {background(layout)}
       <div class="pane card"></div>
       <div class="pane ambient"></div>
@@ -344,7 +369,7 @@ def compare_block(c):
     return out + "</div>"
 
 
-def render_slide(kind, d, ref, idx, total, layout):
+def render_slide(kind, d, ref, idx, total, layout, lang="en"):
     if kind == "cover":
         mid = (f'<div class="h1">{rich(d.get("headline"))}</div>'
                f'<div class="sub">{rich(d.get("sub"))}</div>')
@@ -378,7 +403,7 @@ def render_slide(kind, d, ref, idx, total, layout):
             mid += f'<div class="body">{rich(d.get("body"))}</div>'
         sig = signature(idx, total)
     inner = f'{top_bar(d.get("tag", ""), ref, d.get("icon"))}<div class="mid">{mid}</div>{sig}'
-    return frame(inner, layout)
+    return frame(inner, layout, lang)
 
 
 def build(spec):
@@ -389,8 +414,9 @@ def build(spec):
     if spec.get("cta"):
         items.append(("point", spec["cta"]))
     total = len(items)
+    lang = spec.get("lang", "en")   # "ar" flips the whole deck to RTL Cairo
     return [
-        render_slide(kind, d, ref, i + 1, total, ROTATION[i % len(ROTATION)])
+        render_slide(kind, d, ref, i + 1, total, ROTATION[i % len(ROTATION)], lang)
         for i, (kind, d) in enumerate(items)
     ], total
 
