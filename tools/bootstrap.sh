@@ -31,6 +31,8 @@ done
 for w in Regular Medium; do
   fetch "fonts/IBMPlexMono-$w.ttf" "$DEST/fonts/IBMPlexMono-$w.ttf"
 done
+# Cairo (variable) carries every weight for Arabic decks: spec "lang": "ar".
+fetch fonts/Cairo-Var.ttf "$DEST/fonts/Cairo-Var.ttf"
 
 # Runtime deps. Playwright's Chromium is preinstalled in this image.
 python3 -c "import img2pdf" 2>/dev/null || pip install img2pdf --break-system-packages -q
