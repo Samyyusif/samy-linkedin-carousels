@@ -11,7 +11,7 @@ set -euo pipefail
 RAW="https://raw.githubusercontent.com/Samyyusif/samy-linkedin-carousels/main/tools"
 DEST="$HOME/carousel-tools"
 
-mkdir -p "$DEST/fonts" "$DEST/assets" "$DEST/out"
+mkdir -p "$DEST/fonts" "$DEST/assets" "$DEST/assets/covers" "$DEST/out"
 
 fetch() {  # fetch <repo-relative-path> <local-path>
   if [ -s "$2" ]; then echo "skip  $2"; return; fi
@@ -23,6 +23,13 @@ fetch generate_carousel.py       "$DEST/generate_carousel.py"
 fetch publish_carousel.py        "$DEST/publish_carousel.py"
 fetch icons.py                   "$DEST/icons.py"
 fetch assets/samy-avatar.png     "$DEST/assets/samy-avatar.png"
+
+# photo-cover source images (2026-09-04: replaced the 3D-shape cover
+# experiment - one licensed photo per deck topic, blurred through the glass
+# card + brand-grid overlay). See cover.photo in each spec.
+for c in three-way-match progress-verification cable-schedule-check meeting-action-items inbox-triage; do
+  fetch "assets/covers/$c.jpg" "$DEST/assets/covers/$c.jpg"
+done
 
 for w in Regular Medium SemiBold Bold; do
   fetch "fonts/IBMPlexSans-$w.ttf" "$DEST/fonts/IBMPlexSans-$w.ttf"
