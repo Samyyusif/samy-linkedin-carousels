@@ -204,6 +204,28 @@ body {{ width:{W}px; background:#050406; }}
   padding:18px 22px; margin-top:26px; align-self:flex-start;
   max-width:100%; word-break:break-word; line-height:1.4;
 }}
+/* ---- manual-page mode: numbered steps + a glossary strip -----------------
+   Added 2026-09-04: the spec shape documented in carousel-slide-model.md
+   (steps / terms) had no renderer at all - point/cta slides silently
+   dropped both fields and fell back to an empty body. This is the fix. */
+.steps {{ margin-top:28px; max-width:680px; display:flex; flex-direction:column; gap:16px; }}
+.step {{ display:flex; align-items:flex-start; gap:16px; }}
+.step-n {{
+  font-family:'PlexMono', monospace; font-weight:600; font-size:18px; color:{AMBER};
+  background:rgba(255,165,61,0.14); border:1px solid rgba(255,165,61,0.38);
+  border-radius:9px; width:32px; height:32px; flex:none; margin-top:2px;
+  display:flex; align-items:center; justify-content:center;
+}}
+.step-txt {{ font-weight:400; font-size:25px; line-height:1.5; color:{MUTE}; padding-top:3px; }}
+.terms {{
+  margin-top:26px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.16);
+  display:flex; flex-direction:column; gap:12px; max-width:680px;
+}}
+.term {{ font-size:20px; line-height:1.55; color:{MUTE}; }}
+.term b {{
+  color:{AMBER}; font-weight:600; font-family:'PlexMono', monospace;
+  direction:ltr; unicode-bidi:isolate;
+}}
 /* ---- news slide: one story per slide, led by its number ---- */
 /* Per the dataviz form heuristic, a single headline value is a hero figure,
    not a one-bar chart; a before/after pair is a dumbbell in ONE hue at two
@@ -281,6 +303,10 @@ body {{ width:{W}px; background:#050406; }}
 .slide.ar .figure {{ direction:ltr; }}
 /* the formula block never mirrors - it is Latin and must read left to right */
 .slide.ar .cmd {{ direction:ltr; text-align:left; font-size:23px; }}
+.slide.ar .steps {{ max-width:100%; gap:18px; }}
+.slide.ar .step-txt {{ font-size:24px; line-height:1.7; padding-top:1px; }}
+.slide.ar .terms {{ max-width:100%; }}
+.slide.ar .term {{ font-size:20px; line-height:1.75; }}
 """
 
 LAYOUTS = {
@@ -401,6 +427,17 @@ def render_slide(kind, d, ref, idx, total, layout, lang="en"):
             mid += f'<div class="cmd">{htmllib.escape(str(d["cmd"]))}</div>'
         if d.get("body"):
             mid += f'<div class="body">{rich(d.get("body"))}</div>'
+        if d.get("steps"):
+            rows = "".join(
+                f'<div class="step"><span class="step-n">{i + 1}</span>'
+                f'<span class="step-txt">{rich(s)}</span></div>'
+                for i, s in enumerate(d["steps"]))
+            mid += f'<div class="steps">{rows}</div>'
+        if d.get("terms"):
+            rows = "".join(
+                f'<div class="term"><b>{rich(t.get("t", ""))}</b> — {rich(t.get("d", ""))}</div>'
+                for t in d["terms"])
+            mid += f'<div class="terms">{rows}</div>'
         sig = signature(idx, total)
     inner = f'{top_bar(d.get("tag", ""), ref, d.get("icon"))}<div class="mid">{mid}</div>{sig}'
     return frame(inner, layout, lang)
