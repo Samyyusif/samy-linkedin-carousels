@@ -452,8 +452,15 @@ def build(spec):
         items.append(("point", spec["cta"]))
     total = len(items)
     lang = spec.get("lang", "en")   # "ar" flips the whole deck to RTL Cairo
+    # Bug fixed 2026-09-04: the cover is always item 0, so `i % len(ROTATION)`
+    # put every single deck's cover on layout "a" - every carousel in a feed
+    # had an identical background composition. A per-deck offset (from the
+    # slug, so it's stable across re-renders of the same spec) still keeps
+    # consecutive slides within one deck rotating a/b/c, but makes different
+    # decks start on different layouts.
+    offset = sum(ord(c) for c in spec.get("slug", "")) % len(ROTATION)
     return [
-        render_slide(kind, d, ref, i + 1, total, ROTATION[i % len(ROTATION)], lang)
+        render_slide(kind, d, ref, i + 1, total, ROTATION[(i + offset) % len(ROTATION)], lang)
         for i, (kind, d) in enumerate(items)
     ], total
 
